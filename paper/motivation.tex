@@ -1,0 +1,36 @@
+\Section{Motivation} \label{sec:motivation}
+
+More often than not, distributed systems deployed on PlanetLab run in a
+\textit{slice}, a collection of lightweight virtual machines spread across an
+equal number of nodes~\cite{PlanetLab-architecture}.  Within a slice, a single
+VM, or \textit{sliver}, is subject to naturally occurring  host faults
+(including complete VM re-instantiation), network faults, and resource
+scarcities, all of which can lead to unexpected system behavior.  To counter
+these faults, developers devise means to monitor the health of their systems
+and to perform diagnostic and administrative tasks on their misbehaving
+slivers. These tasks often include reinstalling, reconfiguring, and upgrading
+their software~\cite{PlanetLab-website}.  While there are existing systems
+such as CoMon~\cite{CoMon}, SWORD~\cite{SWORD}, Stork~\cite{Stork}, and
+Puppet~\cite{Puppet} that can handle these tasks, they each present an
+additional deployment challenge to a PlanetLab user who is unfamiliar with
+them and who only needs a small subset of their functionality.
+
+In the process of designing WISH, we considered what expectations we could
+reasonably have of the typical PlanetLab user. 
+By their very nature, PlanetLab users should be familiar with remote shells and
+with UNIX shell programming.  Since they use PlanetLab to deploy and test
+experimental distributed software, they can also be expected to have varying
+degrees of familiarity with distributed programming paradigms and
+design patterns.  Since the default means of contacting and
+administrating PlanetLab slivers is via SSH~\cite{PlanetLab-architecture}, we
+are motivated to create a tool that lets a user extend familiar shell concepts
+such as job management, I/O redirection, and environment variables to operate
+on a collection of hosts instead of a single host.
+
+The challenges PlanetLab users face in managing their slices are not specific
+to PlanetLab's architecture.  Administering collections of hosts in both
+clouds and wide-area networks requires the ability to monitor the hosts'
+states and the ability to issue commands to hosts efficiently.  While there are
+many tools that provide one or both abilities, none to our knowledge leverage
+both a user's shell programming and distributed computing experience as the primary
+means of performing administrative functions.

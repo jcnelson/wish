@@ -1,0 +1,33 @@
+\Section{Related Work} \label{sec:related}
+
+WISH bears some similarity in function to batch-processing systems such as
+Condor~\cite{Condor}, a distributed high-throughput batch computing system
+which schedules jobs in a non-interactive manner on a network-accessible
+computers.  Like WISH, Condor provides an interface for an executing job to
+invoke I/O operations on the originating machine.  However, the goal of WISH
+is to expose distributed job execution through a familiar shell environment in
+order to ease host administration, whereas the goal of Condor is to
+efficiently and opportunistically utilize computing resources across a grid
+for computationally-intensive workloads.  Also, WISH does not concern itself
+with fault-tolerant job execution (including migrating and restarting failed
+jobs) since shell commands can be host-specific and may not be idempotent or
+restartable.
+
+WISH also bears some similarity in both function and usage to the class of
+programs containing Plush~\cite{plush}, vxargs~\cite{vxargs}, and
+pssh~\cite{parallel-ssh}, as well as simple shell scripts that iterate through
+a list of hosts to remotely execute the same given command on each of them.
+While WISH and these programs provide a shell interface to control sets of
+hosts in both the local- and wide-area, WISH goes two steps further by
+exposing hosts as receptacles for processes and files and provides shell-level
+inter-process communication and synchronization primitives.
+
+WISH partly fills the roles of monitoring and software deployment systems like
+Nagios~\cite{nagios}, SmartFrog~\cite{smartfrog}, and Puppet~\cite{Puppet}.
+However, these systems implement their own specialized protocols and languages
+which a user must master before using them to their full potential.  WISH,
+however, only requires knowledge of the UNIX shell and a primer on process
+communication and synchronization concepts.
+
+
+

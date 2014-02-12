@@ -1,0 +1,95 @@
+\appendix \section{Appendix: WISH Commands} \label{sec:appendix}
+
+In this section, we provide a brief listing of commands supported by the WISH
+daemon.
+
+\begin{description}
+
+\item[dctl [start|stop|restart|reset{]}]\hfill \\
+ Start/restart/reset/stop a node's shell daemon
+
+\item[fhide [-h HOST[:PORT{]}{]} PATH [PATH...{]}]\hfill \\
+ Make a file or directory tree that is visible to the system invisible again.
+HOST and PORT refer to the WISH daemon which spawned the job, if it was not
+spawned on localhost.
+
+\item[fshow [-h HOST[:PORT{]}{]} PATH [PATH...{]}]\hfill \\
+Make a file or directory tree visible (but read-only) to
+the system (globally visible to all nodes, but identified on other nodes by the
+path and by the handle of the node on which it resides)
+
+\item[getgpid [-h HOST[:PORT{]}{]} PID] \hfill \\
+Retrieve the global PID when given a local PID
+
+\item[ggetenv [VAR{]}]\hfill \\
+Get a global environment variable from the system (the
+variable could have been set remotely by another process)
+
+\item[gsetenv [VAR VALUE{]}]\hfill \\
+Set a global environment variable in the system
+(globally visible to all nodes)
+
+\item[nget [-r|-l|-d|-c|-n{]} [-h| HOST[:PORT{]}{]} RANK]\hfill \\
+Return the NID of a node with desired characteristics of rank RANK that can be used to
+identify the node for
+the duration of the process's life (for example RANK 0 is always the
+fastest/best)\\  
+	-l            lowest latency \\
+   -r             highest free RAM \\
+   -d             highest free disk \\
+   -c             highest free CPU \\
+   -h HOST[:PORT] Access the daemon running on HOST[:PORT] \\
+   -n             Don't print a host; print the number of nodes. \\
+                  If this option is given, RANK is ignored \\
+   RANK           The rank the desired host must have (0 being the highest/best) \\
+
+%\item[nrel [NID{]}]\hfill \\
+%Release a node (will be implicitly done when the process
+%dies), so it can be chosen again by running nget within the job.
+
+\item[pjoin [-n{]} [-h HOST[:PORT{]}{]} GPID]\hfill \\
+Join with a process (either local or remote, using
+the handle). This will receive the process's stdout and stderr contents, as
+well as return code.
+
+\item[psig [-h HOST[:PORT{]}{]} -SIG GPID]\hfill \\
+Send signal SIG to a process (either local or
+remote, using the handle)
+
+\item[psigall [-h HOST[:PORT{]}{]} -SIG]\hfill \\
+Send SIG to all GPIDs
+
+\item[pspawn [-d{]} [-t TIMEOUT{]} [-h HOST[:PORT{]}{]} [-g GPID{]} [-f FILE{]} [COMMAND{]}]\hfill \\
+Spawn a process to run a job (which is
+either a list of commands or an executable file), but get back a
+globally-unique PID (a GUPID) to it so the user can manipulate it (i.e. signal
+it). Optionally spawn the process on a remote host (user-chosen or
+system-chosen). (NOTE: | means "or" in this documentation).
+
+\item[psync [-h HOST[:PORT{]}{]} [-t TIMEOUT{]} GPID [GPID...{]}]\hfill \\
+Tell a list of processes to synchronize
+execution via a barrier (processes can be local or remote)
+
+\item[rin [NID:STREAM COMMAND|GUPID{]}] 
+Redirect a stream of bytes
+(or copy a file) to a process's stdin (akin to '<', but works on any
+stream/file in the system). STREAM can be commands to be evaluated that produce
+output to be redirected. (note: in the documentation, | means 'or'). If a GUPID
+is given, then the data is directed to the process's stdin
+
+%\item[rout [NID:STREAM|NID:PATH{]} [COMMAND|GUPID{]}]\hfill
+%Redirect a stream (or copy
+%a file) to a file on a particular node or a particular stream of bytes (which
+%can be a series of commands that can receive input from the command or
+%process). If a GUPID is given, then the data is redirected from the
+%corresponding process.
+
+\item[taset [NAME VALUE CMP{]}]\hfill \\
+Atomically test and set a global environment
+variable (perform test COMP on VAR with VALUE, where COMP is an appropriate
+shell comparison like -eq). VAR can be a global environment variable.
+
+\end{description}
+
+
+

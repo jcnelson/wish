@@ -1,0 +1,37 @@
+
+\begin{SaveVerbatim}{ex1}
+gpids=$(seq 1 $(nget -n))
+keydir="/etc/pks/tls/private/"
+
+for in in $gpids; do
+  host=$(nget $i)
+	
+  pspawn -g $i -i /tmp/csr.dat \ 
+	-o /dev/null               \
+    -c "openssl req -new -key  \
+    $keydir/localhost.key" $host
+done
+
+for i in $gpids; do
+  if [[ $(pjoin $i) != 0]]; then
+    echo "Key generation failed \
+    on $(nget $i)"
+  fi
+done
+\end{SaveVerbatim}
+
+
+\begin{figure}
+	\fbox{
+		\begin{minipage}{20em}
+			\small
+			\BUseVerbatim{ex1}
+			\caption{OpenSSL CSR Generation}
+			\label{fig:ex1}
+		\end{minipage}
+	}
+\end{figure}
+
+
+
+

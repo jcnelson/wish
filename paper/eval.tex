@@ -1,0 +1,67 @@
+\Section{Evaluation} \label{sec:eval}
+
+We present a preliminary evaluation of  WISH by implementing two host
+management functions as case studies. Using these examples, we demonstrate
+many of WISH's unique features.  We argue that these tasks are easier to
+perform using a standard UNIX shell in conjunction with WISH than with SSH
+alone.
+
+The first case study is implemented in Figure~\ref{fig:ex1}. The script causes
+each host within a WISH federation to generate an x509 certificate signing
+request with \texttt{openssl}, and then determines which hosts failed to
+generate the certificate.  The second case study is implemented in
+Figures~\ref{fig:ex2} and~\ref{fig:ex3}.  The script allows a user to alter the running state of
+a service on many hosts at once.  Both functions may be implemented by means
+other than WISH, but WISH's capabilities make tasks like this easier to
+program.
+
+\input{figures/ex1}
+
+\Subsection{Process Management}
+
+The difficulty in running \texttt{openssl} to generate x509 certificate
+signing requests \textit{en masse} is that \texttt{openssl} requires user
+input to do so.  In our solution, we put the user input into a local file
+called \texttt{/tmp/csr.dat}, and spawn a process on each host to invoke
+\texttt{openssl}, but redirect \texttt{/tmp/csr.dat} into \texttt{openssl} for
+standard input.  We then join with each \texttt{openssl} process and report
+any hosts that failed to generate the certificate signing requests.
+
+It is possible to use SSH and \texttt{expect} to issue the correct user inputs
+to \texttt{openssl}, but this requires the user to be familiar with
+\texttt{expect}.  It is also possible to distribute \texttt{/tmp/csr.dat} to
+each host and then redirect the local copy to \texttt{openssl}'s standard
+input, but this introduces the requirement that the user (re)distribute
+\texttt{/tmp/csr.dat}  if it changes.  If the user ran \texttt{openssl} within
+SSH and wanted to know which hosts failed to execute it, the user would either
+need to wrap the invocation of \texttt{openssl} with a check on its exit code,
+or execute each invocation of \texttt{openssl} serially and check the exit
+code of SSH.  With WISH, a user can instead run each invocation of
+\texttt{openssl} in parallel and not only capture its exit code, but block
+until all tasks have completed or failed.
+
+\input{figures/ex2} 
+
+\input{figures/ex3}
+
+\Subsection{Global Environment Variables}
+
+Most Linux services are controlled via initscripts, which are used to start,
+stop, and restart them~\cite{linuxbase}.  The difficulty of running many
+initscripts for the same service at once is verifying that each script
+performed as expected.  Our WISH solution in Figure~\ref{fig:ex3} deploys the
+long-running shell process called \texttt{mon.sh}, detailed in
+Figure~\ref{fig:ex2}, to address this problem.  \texttt{mon.sh} periodically
+checks the global environment variable \texttt{SYS\_STATUS} and invokes the
+operation stored as its value on the initscript \texttt{/etc/init.d/project}.
+It records the exit code of the initscript in a global environment variable
+prefixed with \texttt{RC\_} and named after its hostname, waits for every
+other \texttt{mon.sh} instance to do the same, and then resets
+\texttt{SYS\_STATUS} to ``\texttt{done}".
+
+It is possible to use SSH, Plush, or pssh to invoke an initscript across a set
+of nodes, but more difficult.  The user must somehow make the initscript
+invocation report back its success or failure, and additionally have a means
+of knowing when all invocations have completed.  WISH efficiently solves both
+problems by allowing the invocation to share status information with the user
+via global environment variables.

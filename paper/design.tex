@@ -1,0 +1,176 @@
+\Section{Design} \label{sec:design}
+
+We designed WISH to not hide the fact that there are multiple hosts within the
+WISH federation.  There are existing systems such as Plush~\cite{plush} and
+pssh~\cite{parallel-ssh} that provide an interface for interactively issuing
+shell commands to many hosts, but they are limited in their expressiveness
+because they issue commands synchronously, in lock-step.  This approach
+simplifies shell programming by treating a collection of hosts as a single
+host, but it requires the user to issue the hosts the same commands.  This is
+not always desirable.
+
+A more flexible approach is to treat each host as a receptacle in which a user
+can place processes and data, so users can orchestrate host behavior however
+they desire.  This can be partially achieved by iterating over a list of hosts
+and issuing the hosts commands in parallel via a remote shell.  However, this
+solution offers no easy way for the processes to share data and offers no easy
+way for the user to control them once they start.
+
+Given this approach, we designed WISH to provide users with the following
+capabilities.
+
+\begin{description}
+
+\item[Process Control:] A user can spawn, signal, join, and synchronize with
+processes on any host within their WISH instance.
+
+\item[I/O Redirection:] A user can redirect process input and output between
+any hosts in a WISH instance.
+
+\item[Resource Monitoring:] A user can monitor the resource and network
+utilizations of hosts.
+
+\item[Environment Variables:] A user can get, set, and atomically test-and-set
+globally-visible shell environment variables.
+
+\item[File Access:] A user can globally expose files to all other hosts within
+the same WISH instance. Remote hosts can download files which are visible to
+it.
+
+\end{description}
+
+Below, we describe how WISH meets these requirements.
+
+\Subsection{Overview}
+
+WISH uses a federated architecture for communication between its member hosts.
+There is no federation leader, but each member of the federation implements a
+\textit{global shell environment} to coordinate execution and communication
+between the jobs it has been instructed to manage.  The global shell
+environment exposes environment variables, processes, and files that are
+visible to jobs originating from the same daemon, wherever they are executing.
+In practice, each host runs a WISH daemon to participate in the federation,
+and its daemon assumes responsibility for processes spawned by local users.  
+
+To create a federation, a user distributes the WISH daemons and client
+programs to his/her hosts out-of-band, and generates a list of hostnames and
+port numbers for each daemon to use to contact the other daemons.  In future
+work, we intend to allow hosts to authenticate with and securely join existing
+federations and to learn of other joining daemons via a distributed
+gossip protocol.
+
+\Subsection{Client and Commands}
+
+Users do not directly interact with the WISH daemon. Instead, WISH provides
+shell commands and a shell client which communicate with the local WISH daemon
+via the loopback network interface.  The WISH shell client is a program that
+runs as a child of a UNIX shell process that receives and prints output from
+WISH processes to the user's TTY.  We plan to make the client configurable
+such that data from different remote hosts may be color-coded (if the TTY
+supports it), prefixed by the hostname or a host alias, and selectively
+filtered or redirected as the user sees fit.
+
+\Subsection{Peers and Heartbeats}
+
+The WISH daemon attempts to monitor the health of all other hosts within the
+federation. When a host joins the WISH federation, its daemon attempts to
+connect to as many other daemons as possible in order to send and receive
+``heartbeat" packets. The heartbeat packets contain information about a host's
+resource utilization.  Once it connects to its peers within the federation, it
+periodically re-sends heartbeat packets to them, and keeps a bounded log of
+the last heartbeats it has received from each other host connected to it.  The
+heartbeat information may be queried by the user to select hosts with
+desirable resource availabilities.  The information maintained by each daemon
+includes a remote host's average CPU load in the past 5, 10, and 15 minutes,
+the amount of free RAM and disk space, and the average round-trip times of the
+previously-received heartbeat packets from each other host.
+
+WISH provides a command called \texttt{nget} to determine the host with the
+$i$th most free RAM, the $i$th most free disk space, the $i$th lowest CPU load
+in the past 5, 10, and 15 minutes, or  the $i$th lowest network latency (for
+all 0 < $i$ < $N$, the number of hosts).  This is useful for when the user
+does not care which specific hosts are used to process a job, but only needs a
+subset with available capacity.  Additionally, the \texttt{nget} program lets
+a user query the total number of hosts in the federation, so the user can iterate
+through the hosts in the order specified.
+
+\Subsection{Remote Files}
+
+Since WISH jobs run across multiple hosts, a user may need to distribute data
+between them.  To facilitate this, WISH provides an embedded HTTP(S) server to
+serve files from a predetermined document root.  As a security measure, it
+maintains a blacklist of directories within the document root from which no
+files may be served.  Users can blacklist and un-blacklist local files and
+directories with the \texttt{fhide} and \texttt{fshow} commands, respectively.
+
+\Subsection{Process Management}
+
+When a user wishes to create a process to run a job, the local WISH daemon
+starts a \textit{global process} by registering the job with its global shell
+environment and assigning it a globally-unique~\footnote{In practice, a GPID
+is either a user-selected or randomly-generated 64-bit value, making it unique
+with high probability.} GPID (global process identifier).  It then contacts
+the user-indicated host in the federation on which to run the job and forwards
+the job's commands to that remote daemon.  The remote daemon performs some
+bookkeeping, forks a child process to run the job, and acknowledges the local
+daemon's job execution request.  When the child process terminates, the remote
+daemon forwards the exit code and last signal received of the child process
+back to the local daemon, completing the global process's life.  We refer to
+the set of actions the local daemon takes to manage a process as
+\textit{spawning} the process, and the set of actions taken by the remote
+daemon as \textit{executing} the process.
+
+The remote child process must know how to contact the local daemon to
+participate in its shell environment.  Part of the bookkeeping the remote
+daemon performs before forking the child includes setting a few variables in
+the child process's environment which tell the child the hostname and port
+number of the daemon that spawned it.  This information will be preserved
+across future spawns performed by this child, so every descendent process of
+the child will access the global shell environment on the local daemon that
+spawned it (unless explicitly overridden by the user).
+
+There are four commands to manage jobs in WISH.  The \texttt{pspawn} command
+instructs the local daemon to spawn a process and execute it on a remote
+daemon of the user's choosing, and may either specify a list of shell commands
+to evaluate or a locally-hosted binary file to fetch, download, and then
+execute.  The \texttt{psig} command routes signals from the local daemon to
+the remote daemon executing a process, which in turn signals the process
+itself.  The \texttt{psync} command requests or acknowledges process barriers,
+and will not exit until all other processes named in the list of GPIDs passed
+to it perform the same barrier request.  Finally, the \texttt{pjoin} command
+joins with an existing process by waiting until the local daemon has the
+process's exit code, and then retrieving and printing it out.
+
+\Subsection{IO Redirection}
+
+When a WISH daemon executes a process, it directs its standard output and
+standard error files to local, temporary files.  As the process executes the
+user's job, the daemon reads and sends back the data stored in the redirected
+output and error files to the daemon that spawned the process as quickly as it
+can.  Once the data are received by the daemon that spawned the process, they
+are forwarded to the user's client, which prints them out as the user desires.
+
+Sometimes, a user may need to redirect a remotely executing process's standard
+out and/or standard error.  To do this, the user identifies a file for each
+stream in the \texttt{pspawn} command, which causes the daemon to redirect the
+process output accordingly.  Also, a user may need to specify a file to serve
+as standard input for the remote process.  To do this, the user identifies a
+file to \texttt{pspawn} to be used as standard input.  If this file is visible
+in the local daemon's global shell environment, the remote daemon downloads
+the file to temporary storage and opens it as the process's standard input.
+It removes the file once the process terminates.
+
+\Subsection{Environment Variables}
+
+A process running in WISH has access both to its local environment variables
+and the environment variables provided by its originating daemon's global
+shell environment.  A user can get, set, and atomically test-and-set these
+global environment variables in the global shell environment via the
+\texttt{ggetenv}, \texttt{gsetenv}, and \texttt{taset} commands, respectively.
+These commands search their local environment for a WISH daemon's hostname and
+port number, and if present, contact the daemon to carry out the intended
+operation (if not present, they contact localhost at the port number in the
+local WISH configuration).  This way, all descendents of a process started by
+the user's local daemon manipulate the same environment variable space as the
+user.
+

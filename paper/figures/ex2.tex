@@ -1,0 +1,30 @@
+
+\begin{SaveVerbatim}{ex2}
+while true; do
+  sleep 5
+  val=$(ggetenv SYS_STATUS)
+ 
+  if [[$val != "done"]]; then
+    /etc/init.d/project $val
+    ggetenv RC_$(hostname) $?
+    psync $(seq 1 $(nget -n))
+    gsetenv SYS_STATUS done
+  fi
+done
+\end{SaveVerbatim}
+
+
+\begin{figure}
+	\fbox{
+		\begin{minipage}{20em}
+			\small
+			\BUseVerbatim{ex2}
+			\caption{\texttt{mon.sh}: Process Watchdog}
+			\label{fig:ex2}
+		\end{minipage}
+	}
+\end{figure}
+
+
+
+

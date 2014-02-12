@@ -1,0 +1,38 @@
+\Section{Introduction} \label{sec:intro}
+
+In this paper we present our design of the wide area interactive shell (WISH),
+a distributed computing service which provides the ability to scalably execute
+shell commands across wide area networks. WISH is comprised of  a daemon and a
+set of command-line tools which allow any standard UNIX shell to spawn and
+manage \emph{jobs}\footnote{We use the term ``job" to refer to a sequence of
+one or more commands that a user submits to a conventional UNIX shell.  A job
+executes in one process initially, but may fork others.} across a large set of
+hosts.
+
+WISH is targeted at individuals who need more powerful job controls than those
+which are available in  traditional remote shells such as SSH.  For example,
+with WISH a user can quickly set up a publish-subscribe system by spawning a
+process on each host.  This process will periodically query a global
+environment variable and execute commands based upon its value.  As another
+example, a user can quickly distribute large datasets to hosts by scripting a
+subset of hosts to download the dataset from its origin, and then command
+disjoint subsets of hosts to download the dataset from peers that already have
+it.  As a third example, a user can immediately identify a subset of hosts
+with WISH that are available to execute a computationally-intensive task, and
+then use their UNIX shell of choice to issue the task to them.
+
+While existing remote shells such as SSH~\cite{OpenSSH} may be leveraged to
+execute the above examples, the shell user must implement the inter-job and
+inter-host communication infrastructure necessary to ensure correct execution.
+WISH's contribution is that it provides this necessary infrastructure by
+creating a network-wide shell environment and by exposing synchronization
+primitives for a user's job to leverage.  These allow a user to quickly write
+and run jobs in a familiar environment across many hosts, and empower users to
+leverage their knowledge of distributed programming techniques.
+
+In the remainder of this paper, we describe the motivation for designing WISH
+based upon our experience with PlanetLab~\cite{PlanetLab-architecture} slice
+administration.  We then present our design of the WISH system and compare it
+to existing parallel execution environments.  We conclude with case studies
+and a discussion of related and future work.
+

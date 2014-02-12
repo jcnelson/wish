@@ -1,0 +1,22 @@
+
+\begin{SaveVerbatim}{ex3}
+for i in $(seq 1 $(nget -n)); do
+  pspawn -g $i -f mon.sh $(nget $i)
+done
+\end{SaveVerbatim}
+
+
+\begin{figure}
+	\fbox{
+		\begin{minipage}{20em}
+			\small
+			\BUseVerbatim{ex3}
+			\caption{Process Watchdog Launch Script}
+			\label{fig:ex3}
+		\end{minipage}
+	}
+\end{figure}
+
+
+
+
