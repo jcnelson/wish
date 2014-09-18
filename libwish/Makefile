@@ -15,16 +15,15 @@ LIB	:= -lpthread -lcurl -lmicrohttpd
 OBJ	:= libwish.o 
 DEFS	:= -D_REENTRANT -D_THREAD_SAFE
 
-DESTDIR		:= /
-LIBDIR		:= usr/lib
-INCDIR		:= usr/include/wish
+DESTDIR		:= /usr/local/lib
+INCDIR		:= /usr/local/include/wish
 
 all: all_packets libwish_static libwish_dynamic
 	/bin/ln -s $(LIBWISH_FULL_SO) $(LIBWISH_SO) || true
 	/bin/ln -s $(LIBWISH_SO) $(LIBWISH) || true
 
 libwish_dynamic: all_packets $(OBJ) 
-	$(CPP) -shared -W1,-soname,$(LIBWISH_SO) -o $(LIBWISH_FULL_SO) $(OBJ) $(PACKETS_DIR)/*.o $(LIB) $(LIBINC)
+	$(CPP) -shared -Wl,-soname,$(LIBWISH_SO) -o $(LIBWISH_FULL_SO) $(OBJ) $(PACKETS_DIR)/*.o $(LIB) $(LIBINC)
 
 libwish_static: all_packets $(OBJ) 
 	$(AR) rcs $(LIBWISH_A) $(OBJ)
@@ -40,21 +39,21 @@ all_packets:
 
 .PHONY : install
 install:
-	/bin/mkdir -p $(DESTDIR)/$(LIBDIR)
-	/bin/cp -a $(LIBWISH_FULL_SO) $(DESTDIR)/$(LIBDIR)
-	/bin/cp -a $(LIBWISH_A) $(DESTDIR)/$(LIBDIR)
-	/bin/cp -a $(LIBWISH_SO) $(DESTDIR)/$(LIBDIR)
-	/bin/cp -a $(LIBWISH) $(DESTDIR)/$(LIBDIR)
-	/bin/mkdir -p $(DESTDIR)/$(INCDIR)
-	/bin/cp -a $(LIBWISH_H) $(DESTDIR)/$(INCDIR)
+	/bin/mkdir -p $(DESTDIR)/
+	/bin/cp -a $(LIBWISH_FULL_SO) $(DESTDIR)/
+	/bin/cp -a $(LIBWISH_A) $(DESTDIR)/
+	/bin/cp -a $(LIBWISH_SO) $(DESTDIR)/
+	/bin/cp -a $(LIBWISH) $(DESTDIR)/
+	/bin/mkdir -p $(INCDIR)/
+	/bin/cp -a $(LIBWISH_H) $(INCDIR)/
 
 .PHONY : uninstall
 uninstall:
-	/bin/rm $(DESTDIR)/$(LIBDIR)/$(LIBWISH_FULL_SO)
-	/bin/rm $(DESTDIR)/$(LIBDIR)/$(LIBWISH_SO)
-	/bin/rm $(DESTDIR)/$(LIBDIR)/$(LIBWISH)
-	/bin/rm $(DESTDIR)/$(LIBDIR)/$(LIBWISH_A)
-	/bin/rm -rf $(DESTDIR)/$(INCDIR)
+	/bin/rm $(DESTDIR)/$(LIBWISH_FULL_SO)
+	/bin/rm $(DESTDIR)/$(LIBWISH_SO)
+	/bin/rm $(DESTDIR)/$(LIBWISH)
+	/bin/rm $(DESTDIR)/$(LIBWISH_A)
+	/bin/rm -rf $(INCDIR)
 
 .PHONY : clean
 clean:
