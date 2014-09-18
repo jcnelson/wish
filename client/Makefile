@@ -9,10 +9,12 @@ DEFS  := -D_REENTRANT -D_THREAD_SAFE
 
 WISH := wlistend
 
-DESTDIR = /
-BIN_DIR = /usr/bin
+DESTDIR = /usr/local/bin
 
 all: wish
+
+install: wish
+	/bin/cp -a $(WISH) $(DESTDIR)/
 
 wish: $(OBJ) ../libwish/libwish.a
 	$(CPP) -o $(WISH) $(OBJ) $(LIBINC) $(LIB) 
