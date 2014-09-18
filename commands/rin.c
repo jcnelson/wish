@@ -56,8 +56,8 @@ int main(int argc, char *argv[]) {
     char* pch;
     int tok = 0;
     int nid;
-    int command_flag = 1;
     char* stream;
+    int command_flag = 0;
 
     pch = strtok (command1, ":");
     while (pch != NULL)
@@ -85,5 +85,5 @@ int main(int argc, char *argv[]) {
 
     if(sscanf(command2, "%ld", &gupid) == 1) command_flag = 0;
 
-
+   // TODO: finish
 }

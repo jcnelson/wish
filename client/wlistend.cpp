@@ -120,8 +120,8 @@ int main(int argc, char *argv[]) {
  
     printf("%s daemon starting up\n", DAEMON_NAME);
  
-    /* Our process ID and Session ID */
-    pid_t pid, sid;
+    /* Our process ID */
+    pid_t pid;
  
     if (daemonize) {
         printf("starting the daemonizing process\n");

@@ -1272,7 +1272,7 @@ static int is_regular_file( char* flatp, int access ) {
       return -EISDIR;
    }
    
-   if( (sb.st_mode & access) != access ) {
+   if( (sb.st_mode & access) != (unsigned)access ) {
       // missing bits
       errorf("is_regular_file: %s is not accessible with %o\n", flatp, access );
       return -EPERM;
