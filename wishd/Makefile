@@ -1,5 +1,5 @@
 CPP    := g++ -Wall -g
-LIB   := -lwish -lmicrohttpd -lcrypto -lcurl
+LIB   := -lwish -lmicrohttpd -lcrypto -lcurl -lpthread
 INC   := -I/usr/include -I../ -I../libwish/ 
 LIBINC:= -L../libwish/
 C_SRCS:= $(wildcard *.c)
@@ -9,10 +9,12 @@ DEFS  := -D_REENTRANT -D_THREAD_SAFE
 
 WISHD := wishd
 
-DESTDIR = /
-BIN_DIR = /usr/bin
+DESTDIR = /usr/local/bin
 
-all: wishd
+all: $(WISHD)
+
+install: $(WISHD)
+	/bin/cp -a $(WISHD) $(DESTDIR)/
 
 wishd: $(OBJ)
 	$(CPP) -o $(WISHD) $(OBJ) $(LIBINC) $(LIB)
